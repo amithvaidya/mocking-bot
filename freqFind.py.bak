@@ -1,0 +1,90 @@
+import math
+import wave
+import os
+from pydub import AudioSegment
+import matplotlib.pyplot as plt
+import serial
+
+#### Teams can add helper functions
+#### Add all helper functions here
+import struct
+import pandas as pd
+from sklearn import svm
+from pandas import DataFrame
+#from pyAudioAnalysis import audioFeatureExtraction
+from pyAudioAnalysis import ShortTermFeatures
+
+
+
+from features import *
+#from feature_helper import estimated_f0, harmonics
+#from utils import stft, plot_spectrum, plot_time_domain,read_all_wavedata,plot_feature
+import wave
+import struct
+
+import numpy as np
+import os
+
+
+from Feature_value import Feature_value
+from  inst_detect import inst_detect
+from  Instrument_identify import Instrument_identify
+from  onset_notes import onset_notes
+from  Serial_communication import Serial_communication
+
+def freqFind(sound):
+#---------------------------------------Obtaining the frequency spectrum of the audio file----------------------------------------------#
+    mag=np.fft.fft(sound)
+    mag1=mag[:(len(sound)/2)]
+    mag1=np.abs(mag1)
+    mag1=20*np.log10(1+mag1) 
+    X=mag1.reshape(-1,1)
+    minmax_scalar=preprocessing.MinMaxScaler(feature_range=(0,1))
+    data_minmax=minmax_scalar.fit_transform(X)
+    
+    #-----------------------------------Calculating the fundemental frequency------------------------------------------------#
+    
+    wsize=int((len(sound)/2)*0.01) # window size = (file_length/2) x 0.01. We are dividing the spectrum into 100 parts and checking the argmax of each part
+    peak_frequency=np.zeros(100)
+    peak=np.zeros(100)
+    index=0
+    for i in range(0,100):
+        seg=data_minmax[i*wsize:(i+1)*wsize]
+        peak_frequency[index]=(np.argmax(seg)+i*wsize)*44100/len(sound)
+        peak[index]=np.max(seg)
+        index=index+1
+        
+    max_freq=peak_frequency[np.argmax(peak)]
+    flag=0
+    fundemental_frequency=0
+   # plt.stem(peak_frequency,peak)
+   # plt.show()
+    for i in range(0,100):
+        if(peak_frequency[i] != 0):
+                div=max_freq/float(peak_frequency[i])
+                div=round(div,3)
+                divround=round(div)
+                #print(str(abs(divround-div))+" "+str(peak_frequency[i]))
+                err=abs(divround-div)
+        if(peak_frequency[i]>=32 and peak[i]>=0.4 and flag==0 and err<=0.025 ):
+            fundemental_frequency=peak_frequency[i]
+            flag=1
+            break
+   # print(fundemental_frequency)          
+                                     
+    #----------------------------------Obtaining the note based on the fundemental frequency----------------------------------------------------#
+    note=["C","C#","D","D#","E","F", "F#","G","G#","A","A#","B"]
+    noteF=[16.35, 17.32, 18.35, 19.45, 20.60,  21.83, 23.13, 24.50, 25.96, 27.50, 29.14, 30.87]
+    error_percent=3 
+    note_detected=""
+    flag=0
+    for i in range(0,9,1):
+        for j in range(0,12,1):
+            note_frequency=(2**i)*noteF[j]# sf -> standard frequency from noteF array
+            if(abs(100*(fundemental_frequency-note_frequency)/note_frequency)<= error_percent and flag==0):
+                #print("Note detected is "+str(note[j])+str(i))
+                note_detected=note[j]+str(i)
+                flag=1
+                break
+    return note_detected
+

@@ -1,0 +1,23 @@
+from  onset_notes import onset_notes
+from  inst_detect import inst_detect
+
+
+def Instrument_identify(Audio_file):
+	
+
+	
+	Instruments = []
+	Detected_Notes = []
+	Onsets = []
+        #file_name = "Audio.wav"
+	file_name= Audio_file
+
+	#call to detect notes and onset via : onset_detect()
+	Detected_Notes,Onsets = onset_notes(file_name)
+
+
+	#call to train  svm and detect instrument and appending it 
+	Instruments=inst_detect()
+
+
+	return Instruments, Detected_Notes, Onsets

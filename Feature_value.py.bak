@@ -1,0 +1,38 @@
+import math
+import wave
+import os
+from pydub import AudioSegment
+import matplotlib.pyplot as plt
+import serial
+
+#### Teams can add helper functions
+#### Add all helper functions here
+import struct
+import pandas as pd
+from sklearn import svm
+from pandas import DataFrame
+#from pyAudioAnalysis import audioFeatureExtraction
+from pyAudioAnalysis import ShortTermFeatures
+
+
+
+from features import *
+import wave
+import struct
+
+import numpy as np
+import os
+
+from freqFind import freqFind
+from  inst_detect import inst_detect
+from  Instrument_identify import Instrument_identify
+from  onset_notes import onset_notes
+from  Serial_communication import Serial_communication
+from features import read_features, feature_names, extract_all_features
+
+def Feature_value(x):
+        Fs=44100
+        F=[]
+        print(x)
+        F=extract_all_features(x, 44100)
+        return F
